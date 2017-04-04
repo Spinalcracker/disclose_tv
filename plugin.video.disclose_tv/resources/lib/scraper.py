@@ -31,7 +31,19 @@ else:
 from BeautifulSoup import BeautifulSoup
 from urllib2 import urlopen
 
+import urllib2
+
 MAIN_URL = 'http://www.disclose.tv/'
+
+hdr = {'User-Agent': 'Mozilla/52.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.11',
+'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+'Accept-Encoding': 'none',
+'Accept-Language': 'en-US,en;q=0.8',
+'Connection': 'keep-alive'}
+
+
+
 
 
 class Scraper:
@@ -68,7 +80,7 @@ class Scraper:
             thumbData = str(thumbData)
             #plugin.log.info(u'SPINALRaw: %s' % thumbData) ###uncomment to see raw image url in logfile
             thumbImg = re.search(r"src=\"(.*?)\"", thumbData)
-            thumbImg = str(thumbImg.group(1))
+            thumbImg = str(thumbImg.group(1)) #.replace('135x76','')) ##tried to use larger image but underscaled by Krypton default skin so can't fix
             #plugin.log.info(u'SPINALClean: %s' % thumbImg) ###uncomment to see clean image url in logfile
 
             videos.append({
@@ -84,7 +96,7 @@ class Scraper:
         data = self.__get_url(url)
        
         if plugin.get_setting('Disable_HD_Default') == 'false':
-            hdcheck = re.search(r"https://www.youtube.com/embed/(.*?)\"", data)
+            hdcheck = re.search(r"div class=\"youtube-player\" data-id=\"(.*?)\"", data)
             if hdcheck:
                 match = hdcheck
             else:
@@ -94,7 +106,7 @@ class Scraper:
                 else:
                     match = re.search(r"(https?://video.*?\.(flv|mp4|webm))", data)
         else:
-            match = re.search(r"https://www.youtube.com/embed/(.*?)\"", data)
+            match = re.search(r"div class=\"youtube-player\" data-id=\"(.*?)\"", data)
             if not match:
                 match = re.search(r"(https?://video.*?\.(flv|mp4|webm))", data)
         if match:
@@ -117,7 +129,8 @@ class Scraper:
 
     def __get_url(self, url):
         log('__get_url opening url: %s' % url)
-        response = urlopen(url).read()
+        req = urllib2.Request(url, headers=hdr)
+        response = urlopen(req).read()
         log('__get_url got %d bytes' % len(response))
         return response
 
